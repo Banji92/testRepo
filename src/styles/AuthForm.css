@@ -1,0 +1,198 @@
+
+.header-image {
+  padding: 8px;
+  gap: 8px;
+  width: 365px;
+  height: 70px;
+  margin-bottom: 20px;
+}
+
+.explore-auth {
+  width: 370px;
+  height: 104px;
+  margin: 12px;
+}
+
+
+
+
+.explore-button {
+  background-color: #37169c;
+  color: white;
+  width: 370px;
+  height: 48px;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  /* font-family: Manrope; */
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.button-container {
+  display: flex;
+  margin-bottom: 70px;
+  width: 370px;
+}
+
+.auth-button {
+  background-color: #f3f2ff;
+  border: 1px #f3f2ff;
+  width: 185px;
+  height: 44px;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.auth-button:hover,
+.auth-button.active {
+  background-color: #d5d4ff;
+  border: none;
+}
+
+.button-toggle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 370px;
+  margin-bottom: 20px;
+}
+.Apple {
+  background-color: #fefefe;
+}
+.social-button {
+  width: 370px;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.same {
+  color: var(--primary-green-100002-d-40, #002d40);
+  /* font-family: Manrope; */
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.form-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  width: 370px;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 10px;
+  color: #aaa;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px #f8f8fc;
+  border-radius: 12px;
+  padding-left: 30px;
+  background-color: #f8f8fc;
+}
+
+.toggle-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  width: 370px;
+  margin-bottom: 20px;
+}
+
+.forgot-password-link {
+  text-decoration: none;
+  margin-left: auto;
+  /* font-family: Manrope; */
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  color: #37169c;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+.remember-password-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.checkbox.checked {
+  background-color: #37169c;
+  color: white;
+}
+
+.submit-button {
+  background-color: #37169c;
+  width: 370px;
+  height: 52px;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 12px;
+  color: var(--neutral-01100, #fefefe);
+  /* font-family: Manrope; */
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+
+.all {
+  width: 352px;
+  /* font-family: Karla; */
+  margin-top: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  text-align: center;
+  color: #454545;
+}
