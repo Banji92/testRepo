@@ -92,7 +92,7 @@ const Live = () => {
                         onClick={() => navigate('/ScheduleForm')}
                         className="p-2 rounded reason"
                       >
-                        Schedule with Calendar
+                        Schedule with Calendar Like
                       </button>
                     </div>
                   </div>
