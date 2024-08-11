@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import '../../styles/LiveUpdate.css';
 import Logo from '../../assets/logo.png';
 import Live from '../../assets/Live.png';
@@ -38,11 +38,61 @@ const StartLive = () => {
   const [showLeftImage, setShowLeftImage] = useState(false);
   const [requestToJoin, setRequestToJoin] = useState(false);
   const [showAdditionalImage, setShowAdditionalImage] = useState(false);
-  const [viewerCount, setViewerCount] = useState(0); // Added state for viewer count
+  const [connectedUsers, setConnectedUsers] = useState([]);
+  const [peerConnections, setPeerConnections] = useState([]);
+  const [ws, setWs] = useState(null);
 
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const localStream = useRef(null);
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    const socket = new WebSocket('ws://localhost:5000');
+    setWs(socket);
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      handleWebSocketMessage(data);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  const handleWebSocketMessage = (data) => {
+    const peerConnection = new RTCPeerConnection();
+    peerConnections.push(peerConnection);
+
+    if (data.type === 'offer') {
+      peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+      peerConnection.createAnswer().then(answer => {
+        peerConnection.setLocalDescription(answer);
+        ws.send(JSON.stringify({ type: 'answer', answer }));
+      });
+    } else if (data.type === 'answer') {
+      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    } else if (data.type === 'ice-candidate') {
+      peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+
+    peerConnection.ontrack = (event) => {
+      const remoteVideo = document.createElement('video');
+      remoteVideo.srcObject = event.streams[0];
+      remoteVideo.autoplay = true;
+      remoteVideo.style.width = '493px';
+      remoteVideo.style.height = '277px';
+      document.body.appendChild(remoteVideo);
+    };
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        ws.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate }));
+      }
+    };
+  };
 
   const toggleImage1 = () => {
     setImageToggled1(!imageToggled1);
@@ -69,34 +119,47 @@ const StartLive = () => {
     setShowLeftImage(true);
   };
 
-  const handleRequestToJoin = () => {
+  const handleRequestToJoin = async () => {
     setRequestToJoin(true);
+    ws.send(JSON.stringify({ type: 'request-to-join' }));
   };
 
   const handleJoinClick = () => {
     setShowAdditionalImage(true);
     setRequestToJoin(false);
+
+    const peerConnection = new RTCPeerConnection();
+    localStream.current.getTracks().forEach(track => peerConnection.addTrack(track, localStream.current));
+
+    peerConnection.createOffer().then(offer => {
+      peerConnection.setLocalDescription(offer);
+      ws.send(JSON.stringify({ type: 'offer', offer }));
+    });
+
+    peerConnections.push(peerConnection);
   };
 
   const startVideo = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoRef.current.srcObject = stream;
-      streamRef.current = stream;
+      localStream.current = stream;
     } catch (err) {
       console.error("Error accessing webcam: ", err);
     }
   };
 
   const stopVideo = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+    if (localStream.current) {
+      localStream.current.getTracks().forEach(track => track.stop());
+      localStream.current = null;
     }
   };
 
-  const handleViewerCountClick = () => {
-    alert(`Number of viewers currently: ${viewerCount}`);
+  const fetchConnectedUsers = async () => {
+    const response = await fetch('http://localhost:5000/connected-users');
+    const users = await response.json();
+    setConnectedUsers(users);
   };
 
   return (
@@ -112,7 +175,7 @@ const StartLive = () => {
       <div className="state">
         <div className="part">
           <img src={Live} alt="Live" />
-          <img src={UploadVideo} alt="UploadVideo" />
+          <img src={UploadVideo} alt="Upload Video" />
           <img src={Calendar} alt="Calendar" />
           <img src={CourseManage} alt="Course Manage" />
           <img src={Analytics} alt="Analytics" />
@@ -141,9 +204,8 @@ const StartLive = () => {
                         }}
                       ></video>
                       {showAdditionalImage && (
-                        <img
-                          src={AdditionalPerson}
-                          alt="Additional Person"
+                        <video
+                          autoPlay
                           style={{
                             width: '493px',
                             height: '277px',
@@ -184,15 +246,15 @@ const StartLive = () => {
                 <button onClick={toggleChat}>
                   <img src={talk} alt="Toggle Chat" />
                 </button>
+                <button onClick={fetchConnectedUsers}>
+                  List Connected Users
+                </button>
                 <button>
                   <img src={Group} alt="Toggle Hamburger" />
                 </button>
                 <img src={Hamburger} alt="Other" />
                 <button onClick={handleRequestToJoin}>
                   Request to Join Live
-                </button>
-                <button onClick={handleViewerCountClick}>
-                  Viewers Count
                 </button>
               </div>
             </div>
