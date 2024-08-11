@@ -1,46 +1,40 @@
-import React, { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import '../../styles/LiveUpdate.css';
 import '../../styles/Muted.css';
 import Logo from '../../assets/logo.png';
 import Live from '../../assets/Live.png';
-import AuthIcons from '../../assets/AuthIcons.png';
-import Analytics from '../../assets/Analytics.png';
-import Calendar from '../../assets/Calendar.png';
-import CourseManage from '../../assets/CourseManage.png';
-import ExploreFor from '../../assets/ExploreFor.png';
-import HorizontalDivider from '../../assets/HorizontalDivider.png';
 import Notification from '../../assets/Notification.png';
-import Profile from '../../assets/Profile.png';
-import UploadVideo from '../../assets/UploadVideo.png';
-import Chip from '../../assets/Chip.png';
-import VideoTile from '../../assets/VideoTile.png';
 import Audio from '../../assets/Audio.png';
 import AudioLess from '../../assets/AudioLess.png';
 import Camera from '../../assets/Camera.png';
 import CameraLess from '../../assets/CameraLess.png';
 import SettingBar from '../../assets/SettingBar.png';
 import List from '../../assets/List.png';
-import { useNavigate } from "react-router-dom";
-import StartLive from "./StartLive";
+import Chip from '../../assets/Chip.png';
+import VideoTile from '../../assets/VideoTile.png';
 
 const Muted = () => {
-  const [activeMode, setActiveMode] = useState('live');
-  const [showGoLiveBox, setShowGoLiveBox] = useState(true);
-  const [imageToggled1, setImageToggled1] = useState(false);
-  const [imageToggled2, setImageToggled2] = useState(false);
-  const [showBeneathImage, setShowBeneathImage] = useState(false);
+  const [imageToggled1, setImageToggled1] = React.useState(false);
+  const [imageToggled2, setImageToggled2] = React.useState(false);
+  const [showBeneathImage, setShowBeneathImage] = React.useState(false);
 
   const navigate = useNavigate();
 
   const StartLive = () => {
+    // Navigate to the live page
     navigate('/StartLive');
-    console.log('Schedule');
-  };
+    console.log('Live started');
 
- 
+    // Create mailto link
+    const recipientEmail = 'onthestreethoodbillionaire@gmail.com'; // Replace with the actual recipient's email
+    const subject = 'Live Session Started';
+    const body = 'A live session has started. Click the link to join: https://test-repo-flame-ten.vercel.app/StartLive';
 
-  const handleDismiss = () => {
-    setShowGoLiveBox(false);
+    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Open the mailto link in the default email client
+    window.location.href = mailtoLink;
   };
 
   const toggleImage1 = () => {
@@ -63,20 +57,14 @@ const Muted = () => {
         <img src={Logo} alt="Logo" />
         <div className='input-container'>
           <input placeholder="search" className="pray" />
-          <img src={AuthIcons} alt="Auth Icons" />
+          <img src={Notification} alt="Notification" />
         </div>
-        <img src={Notification} alt="Notification" />
       </div>
       <div className="state">
         <div className="part">
           <img src={Live} alt="Live" />
-          <img src={UploadVideo} alt="UploadVideo" />
-          <img src={Calendar} alt="Calendar" />
-          <img src={CourseManage} alt="Course Manage" />
-          <img src={Analytics} alt="Analytics" />
-          <img src={ExploreFor} alt="Explore For" />
-          <img src={Profile} alt="Profile" />
-          <img src={HorizontalDivider} alt="Horizontal Divider" />
+          <img src={Chip} alt="Chip" />
+          <img src={VideoTile} alt="Video Tile" />
         </div>
         <div className="schedule">
           <div className="container">
@@ -98,7 +86,7 @@ const Muted = () => {
                     <img src={imageToggled2 ? Camera : CameraLess} alt="Toggle Image 2" />
                   </button>
                   <button >
-                    <img src={SettingBar} alt="Setting Bar"  className=" recite"/>
+                    <img src={SettingBar} alt="Setting Bar" className="recite" />
                   </button>
                 </div>
                 {showBeneathImage && (
@@ -107,7 +95,7 @@ const Muted = () => {
                   </div>
                 )}
                 <div className="flex mt-6 space-x-4 w-full justify-center">
-                  <button className="Ore  p-2">Ore Aisha</button>
+                  <button className="Ore p-2">Ore Aisha</button>
                   <button onClick={StartLive} className="Aisha text-white p-2">Go Live</button>
                 </div>
               </div>

@@ -38,6 +38,7 @@ const StartLive = () => {
   const [showLeftImage, setShowLeftImage] = useState(false);
   const [requestToJoin, setRequestToJoin] = useState(false);
   const [showAdditionalImage, setShowAdditionalImage] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0); // Added state for viewer count
 
   const navigate = useNavigate();
   const videoRef = useRef(null);
@@ -92,6 +93,10 @@ const StartLive = () => {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+  };
+
+  const handleViewerCountClick = () => {
+    alert(`Number of viewers currently: ${viewerCount}`);
   };
 
   return (
@@ -185,6 +190,9 @@ const StartLive = () => {
                 <img src={Hamburger} alt="Other" />
                 <button onClick={handleRequestToJoin}>
                   Request to Join Live
+                </button>
+                <button onClick={handleViewerCountClick}>
+                  Viewers Count
                 </button>
               </div>
             </div>
