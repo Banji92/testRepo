@@ -63,35 +63,39 @@ const StartLive = () => {
   }, []);
 
   const handleWebSocketMessage = (data) => {
-    const peerConnection = new RTCPeerConnection();
-    peerConnections.push(peerConnection);
-
-    if (data.type === 'offer') {
+    if (data.type === "offer") {
+      const peerConnection = new RTCPeerConnection();
+      peerConnections.push(peerConnection);
+      
       peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
       peerConnection.createAnswer().then(answer => {
         peerConnection.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: 'answer', answer }));
+        ws.send(JSON.stringify({ type: "answer", answer }));
       });
-    } else if (data.type === 'answer') {
-      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-    } else if (data.type === 'ice-candidate') {
-      peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+
+      peerConnection.ontrack = (event) => {
+        const remoteVideo = document.createElement("video");
+        remoteVideo.srcObject = event.streams[0];
+        remoteVideo.autoplay = true;
+        remoteVideo.style.width = "493px";
+        remoteVideo.style.height = "277px";
+        document.body.appendChild(remoteVideo);
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          ws.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+        }
+      };
+    } else if (data.type === "answer") {
+      peerConnections.forEach((pc) => {
+        pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      });
+    } else if (data.type === "ice-candidate") {
+      peerConnections.forEach((pc) => {
+        pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      });
     }
-
-    peerConnection.ontrack = (event) => {
-      const remoteVideo = document.createElement('video');
-      remoteVideo.srcObject = event.streams[0];
-      remoteVideo.autoplay = true;
-      remoteVideo.style.width = '493px';
-      remoteVideo.style.height = '277px';
-      document.body.appendChild(remoteVideo);
-    };
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        ws.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate }));
-      }
-    };
   };
 
   const toggleImage1 = () => {
@@ -121,7 +125,7 @@ const StartLive = () => {
 
   const handleRequestToJoin = async () => {
     setRequestToJoin(true);
-    ws.send(JSON.stringify({ type: 'request-to-join' }));
+    ws.send(JSON.stringify({ type: "request-to-join", id: generateUniqueId() }));
   };
 
   const handleJoinClick = () => {
@@ -133,7 +137,7 @@ const StartLive = () => {
 
     peerConnection.createOffer().then(offer => {
       peerConnection.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: 'offer', offer }));
+      ws.send(JSON.stringify({ type: "offer", offer }));
     });
 
     peerConnections.push(peerConnection);
@@ -160,6 +164,10 @@ const StartLive = () => {
     const response = await fetch('http://localhost:5000/connected-users');
     const users = await response.json();
     setConnectedUsers(users);
+  };
+
+  const generateUniqueId = () => {
+    return '_' + Math.random().toString(36).substr(2, 9);
   };
 
   return (

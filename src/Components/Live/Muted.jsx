@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from 'uuid'; // Import UUID
 import '../../styles/LiveUpdate.css';
 import '../../styles/Muted.css';
 import Logo from '../../assets/logo.png';
@@ -22,19 +23,39 @@ const Muted = () => {
   const navigate = useNavigate();
 
   const StartLive = () => {
-    // Navigate to the live page
-    navigate('/StartLive');
+    // Generate a unique session ID
+    const sessionId = uuidv4();
+    console.log('Live session ID:', sessionId);
+
+    // Navigate to the live page with the session ID
+    navigate(`/StartLive?sessionId=${sessionId}`);
     console.log('Live started');
 
     // Create mailto link
     const recipientEmail = 'onthestreethoodbillionaire@gmail.com'; // Replace with the actual recipient's email
     const subject = 'Live Session Started';
-    const body = 'A live session has started. Click the link to join: https://test-repo-flame-ten.vercel.app/StartLive';
+    const body = `A live session has started. Click the link to join: https://test-repo-flame-ten.vercel.app/StartLive?sessionId=${sessionId}`;
 
     const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     // Open the mailto link in the default email client
     window.location.href = mailtoLink;
+
+    // Send the session ID and other details to the backend
+    fetch('http://localhost:5000/api/live', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   };
 
   const toggleImage1 = () => {
