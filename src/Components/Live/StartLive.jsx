@@ -1,19 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import '../../styles/LiveUpdate.css';
 import Logo from '../../assets/logo.png';
 import Live from '../../assets/Live.png';
-import AuthIcons from '../../assets/AuthIcons.png';
-import Analytics from '../../assets/Analytics.png';
-import Calendar from '../../assets/Calendar.png';
-import CourseManage from '../../assets/CourseManage.png';
-import ExploreFor from '../../assets/ExploreFor.png';
-import HorizontalDivider from '../../assets/HorizontalDivider.png';
 import Notification from '../../assets/Notification.png';
-import Profile from '../../assets/Profile.png';
-import UploadVideo from '../../assets/UploadVideo.png';
 import Audio from '../../assets/Audio.png';
 import AudioLess from '../../assets/AudioLess.png';
-import Panel from '../../assets/Panel.png';
 import Camera from '../../assets/Camera.png';
 import CameraLess from '../../assets/CameraLess.png';
 import SettingBar from '../../assets/SettingBar.png';
@@ -28,7 +20,6 @@ import NotificationIcon from '../../assets/Request.png';
 import End from '../../assets/End.png';
 import Left from '../../assets/Left.png';
 import AdditionalPerson from '../../assets/AdditionalPerson.png';
-import { useNavigate } from "react-router-dom";
 
 const StartLive = () => {
   const [imageToggled1, setImageToggled1] = useState(false);
@@ -42,10 +33,13 @@ const StartLive = () => {
   const [peerConnections, setPeerConnections] = useState([]);
   const [ws, setWs] = useState(null);
 
-  const navigate = useNavigate();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const localStream = useRef(null);
+
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const sessionId = query.get('sessionId');
 
   useEffect(() => {
     // Initialize WebSocket connection
@@ -54,6 +48,7 @@ const StartLive = () => {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log('WebSocket message received:', data);
       handleWebSocketMessage(data);
     };
 
@@ -62,94 +57,76 @@ const StartLive = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Join the live session with the session ID
+    if (sessionId) {
+      ws.send(JSON.stringify({ type: 'join', sessionId }));
+      console.log('Joined live session with ID:', sessionId);
+    }
+  }, [sessionId, ws]);
+
+  useEffect(() => {
+    // Fetch the number of connected users
+    const fetchConnectedUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/connected-users'); // Adjust the URL based on your backend
+        const users = await response.json();
+        setConnectedUsers(users);
+        console.log('Number of connected users:', users.length);
+      } catch (error) {
+        console.error('Error fetching connected users:', error);
+      }
+    };
+
+    // Fetch connected users initially and on any relevant update
+    fetchConnectedUsers();
+  }, [ws]);
+
   const handleWebSocketMessage = (data) => {
-    if (data.type === "offer") {
-      const peerConnection = new RTCPeerConnection();
-      peerConnections.push(peerConnection);
-      
+    const peerConnection = new RTCPeerConnection();
+    peerConnections.push(peerConnection);
+
+    if (data.type === 'offer') {
+      console.log('Received offer:', data.offer);
       peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
       peerConnection.createAnswer().then(answer => {
         peerConnection.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: "answer", answer }));
+        ws.send(JSON.stringify({ type: 'answer', answer }));
       });
-
-      peerConnection.ontrack = (event) => {
-        const remoteVideo = document.createElement("video");
-        remoteVideo.srcObject = event.streams[0];
-        remoteVideo.autoplay = true;
-        remoteVideo.style.width = "493px";
-        remoteVideo.style.height = "277px";
-        document.body.appendChild(remoteVideo);
-      };
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          ws.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
-        }
-      };
-    } else if (data.type === "answer") {
-      peerConnections.forEach((pc) => {
-        pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      });
-    } else if (data.type === "ice-candidate") {
-      peerConnections.forEach((pc) => {
-        pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-      });
+    } else if (data.type === 'answer') {
+      console.log('Received answer:', data.answer);
+      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    } else if (data.type === 'ice-candidate') {
+      console.log('Received ICE candidate:', data.candidate);
+      peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
-  };
 
-  const toggleImage1 = () => {
-    setImageToggled1(!imageToggled1);
-  };
+    peerConnection.ontrack = (event) => {
+      console.log('Remote track received:', event.streams[0]);
+      const remoteVideo = document.createElement('video');
+      remoteVideo.srcObject = event.streams[0];
+      remoteVideo.autoplay = true;
+      remoteVideo.style.width = '493px';
+      remoteVideo.style.height = '277px';
+      document.body.appendChild(remoteVideo);
+    };
 
-  const toggleImage2 = () => {
-    setImageToggled2(!imageToggled2);
-    if (!imageToggled2) {
-      startVideo();
-    } else {
-      stopVideo();
-    }
-  };
-
-  const toggleChat = () => {
-    setShowChat(!showChat);
-  };
-
-  const toggleAdjustImage = () => {
-    setShowAdjustImage(!showAdjustImage);
-  };
-
-  const handleEndClick = () => {
-    setShowLeftImage(true);
-  };
-
-  const handleRequestToJoin = async () => {
-    setRequestToJoin(true);
-    ws.send(JSON.stringify({ type: "request-to-join", id: generateUniqueId() }));
-  };
-
-  const handleJoinClick = () => {
-    setShowAdditionalImage(true);
-    setRequestToJoin(false);
-
-    const peerConnection = new RTCPeerConnection();
-    localStream.current.getTracks().forEach(track => peerConnection.addTrack(track, localStream.current));
-
-    peerConnection.createOffer().then(offer => {
-      peerConnection.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: "offer", offer }));
-    });
-
-    peerConnections.push(peerConnection);
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        console.log('Sending ICE candidate:', event.candidate);
+        ws.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate }));
+      }
+    };
   };
 
   const startVideo = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log('Local video stream started:', stream);
       videoRef.current.srcObject = stream;
       localStream.current = stream;
     } catch (err) {
-      console.error("Error accessing webcam: ", err);
+      console.error('Error accessing webcam:', err);
     }
   };
 
@@ -157,17 +134,8 @@ const StartLive = () => {
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => track.stop());
       localStream.current = null;
+      console.log('Local video stream stopped');
     }
-  };
-
-  const fetchConnectedUsers = async () => {
-    const response = await fetch('http://localhost:5000/connected-users');
-    const users = await response.json();
-    setConnectedUsers(users);
-  };
-
-  const generateUniqueId = () => {
-    return '_' + Math.random().toString(36).substr(2, 9);
   };
 
   return (
@@ -176,9 +144,8 @@ const StartLive = () => {
         <img src={Logo} alt="Logo" />
         <div className='input-container'>
           <input placeholder="search" className="pray" />
-          <img src={AuthIcons} alt="Auth Icons" />
+          <img src={Notification} alt="Notification" />
         </div>
-        <img src={Notification} alt="Notification" />
       </div>
       <div className="state">
         <div className="part">
@@ -254,17 +221,16 @@ const StartLive = () => {
                 <button onClick={toggleChat}>
                   <img src={talk} alt="Toggle Chat" />
                 </button>
-                <button onClick={fetchConnectedUsers}>
-                  List Connected Users
-                </button>
-                <button>
-                  <img src={Group} alt="Toggle Hamburger" />
-                </button>
-                <img src={Hamburger} alt="Other" />
-                <button onClick={handleRequestToJoin}>
-                  Request to Join Live
+                <button onClick={toggleAdditionalImage}>
+                  <img src={AdditionalPerson} alt="Additional Person" />
                 </button>
               </div>
+              <button onClick={fetchConnectedUsers} className="btn btn-primary">List Connected Users</button>
+              {connectedUsers.map(user => (
+                <div key={user.id}>
+                  <p>{user.username}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
